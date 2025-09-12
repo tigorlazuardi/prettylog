@@ -9,8 +9,6 @@ import (
 	"github.com/tidwall/pretty"
 )
 
-type Option func(h *Handler)
-
 func New(opts ...Option) *Handler {
 	h := &Handler{
 		writer: WrapWriteLocker(os.Stderr),
@@ -27,14 +25,14 @@ func New(opts ...Option) *Handler {
 		pretty:              CanPretty(os.Stderr),
 		functionFormatter:   TrimPrefixFunctionFormatter,
 		fileLineFormatter:   ShortFileLineFormatter,
-		timeFormatter:       ShortTimeFormatter,
+		timeKeyFormatter:    TimeOnlyFormatter,
 		messageFormatter:    DefaultMessageFormatter,
 		sourceStyler:        DefaultSourceStyler,
 		timeStyler:          DefaultTimeStyler,
 		messageStyler:       DefaultMessageStyler,
 		prettyOption:        pretty.DefaultOptions,
 		prettyColor:         pretty.TerminalStyle,
-		packageNamePrefix:   "",
+		packageName:         "",
 	}
 	for _, opt := range opts {
 		if opt == nil {

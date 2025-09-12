@@ -19,33 +19,35 @@ type Handler struct {
 	opts   *slog.HandlerOptions
 	pretty bool
 
-	// Keys
-	timeKey     string
-	fileKey     string
-	functionKey string
+	headerWriters []EntryWriter
+	bodyWriter    EntryWriter
 
 	// Formatters
-	functionFormatter   func(lvl slog.Level, packageNamePrefix string, frame runtime.Frame) string
-	fileLineFormatter   func(lvl slog.Level, frame runtime.Frame) string
-	timeFormatter       func(lvl slog.Level, t time.Time) string
-	levelValueFormatter func(lvl slog.Level) string
-	messageFormatter    func(lvl slog.Level, msg string) string
+	functionKeyFormatter   Formatter
+	functionValueFormatter Formatter
+	fileKeyFormatter       Formatter
+	fileValueFormatter     Formatter
+	timeKeyFormatter       Formatter
+	timeValueFormatter     Formatter
+	levelFormatter         Formatter
+	messageFormatter       Formatter
 
 	// Stylers
-	sourceStyler     func(lvl slog.Level, s string) string
-	sourceKeyStyler  func(lvl slog.Level, s string) string
-	timeStyler       func(lvl slog.Level, s string) string
-	timeKeyStyler    func(lvl slog.Level, s string) string
-	levelValueStyler func(lvl slog.Level, s string) string
-	messageStyler    func(lvl slog.Level, s string) string
+	sourceStyler        Styler
+	functionKeyStyler   Styler
+	functionValueStyler Styler
+	timeValueStyler     Styler
+	timeKeyStyler       Styler
+	levelValueStyler    Styler
+	messageStyler       Styler
 
 	// JSON prettier options
 	prettyOption *pretty.Options
 	prettyColor  *pretty.Style
 
-	packageNamePrefix string
-	addNewLine        bool
-	pool              *limitedPool
+	packageName string
+	addNewLine  bool
+	pool        *limitedPool
 }
 
 // Enabled implements [slog.Handler] interface.
@@ -63,8 +65,6 @@ func (ha *Handler) Handle(ctx context.Context, rec slog.Record) error {
 	buf := ha.pool.Get()
 	defer ha.pool.Put(buf)
 
-	frame, _ := runtime.CallersFrames([]uintptr{rec.PC}).Next()
-
 	if !ha.pretty { // If not pretty, just pass everything to slog.JSONHandler.
 		serializer := ha.createSerializer(buf)
 		if err := serializer.Handle(ctx, rec); err != nil {
@@ -76,16 +76,25 @@ func (ha *Handler) Handle(ctx context.Context, rec slog.Record) error {
 		return err
 	}
 
-	if lvlString := ha.formatLevel(rec.Level); len(lvlString) > 0 {
+	frame, _ := runtime.CallersFrames([]uintptr{rec.PC}).Next()
+	info := RecordInfo{
+		Record:      rec,
+		PackageName: ha.packageName,
+		Frame:       frame,
+	}
+
+	if lvlString := ha.formatLevel(info); len(lvlString) > 0 {
 		buf.WriteString(lvlString)
 	}
-	if msg := ha.formatMessage(rec.Level, rec.Message); len(msg) > 0 {
+	if msg := ha.formatMessage(info); len(msg) > 0 {
 		if buf.Len() > 0 {
 			buf.WriteRune(' ')
 		}
 		buf.WriteString(msg)
 	}
-	timeKey := ha.formatTimeKey(rec.Level, ha.timeKey)
+	timeKey := ha.formatTimeKey(info)
+	functionKey := ha.formatFunctionKey(info)
+	fileKey := ha.formatFileKey(info)
 	timeStr := ha.formatTimeValue(rec.Level, rec.Time)
 	functionKey := ha.formatFunctionKey(rec.Level, ha.functionKey, frame)
 	fieldLength := max(len(timeKey), len(functionKey))
@@ -104,72 +113,102 @@ func (ha *Handler) Handle(ctx context.Context, rec slog.Record) error {
 	return nil
 }
 
-func (ha *Handler) formatLevel(lvl slog.Level) string {
+func (ha *Handler) formatLevel(info RecordInfo) string {
 	var levelText string
-	if ha.levelValueFormatter != nil {
-		levelText = ha.levelValueFormatter(lvl)
-	} else {
-		levelText = lvl.String()
+	if ha.levelFormatter != nil {
+		levelText = ha.levelFormatter(info)
 	}
 	if levelText == "" {
 		return levelText
 	}
 	if ha.levelValueStyler != nil {
-		levelText = ha.levelValueStyler(lvl, levelText)
+		levelText = ha.levelValueStyler(info, levelText)
 	}
 	return levelText
 }
 
-func (ha *Handler) formatMessage(lvl slog.Level, msg string) string {
+func (ha *Handler) formatMessage(info RecordInfo) string {
+	var msg string
 	if ha.messageFormatter != nil {
-		msg = ha.messageFormatter(lvl, msg)
+		msg = ha.messageFormatter(info)
 	}
 	if msg == "" {
 		return msg
 	}
 	if ha.messageStyler != nil {
-		msg = ha.messageStyler(lvl, msg)
+		msg = ha.messageStyler(info, msg)
 	}
 	return msg
 }
 
-func (ha *Handler) formatTimeKey(lvl slog.Level, s string) string {
+func (ha *Handler) formatTimeKey(info RecordInfo) string {
+	var timeKey string
+	if ha.timeKeyFormatter != nil {
+		timeKey = ha.timeKeyFormatter(info)
+	}
+	if timeKey == "" {
+		return timeKey
+	}
 	if ha.timeKeyStyler != nil {
-		s = ha.timeKeyStyler(lvl, s)
+		timeKey = ha.timeKeyStyler(info, timeKey)
+	}
+	return timeKey
+}
+
+func (ha *Handler) formatTimeValue(info RecordInfo) string {
+	var timeText string
+	if ha.timeValueFormatter != nil {
+		timeText = ha.timeValueFormatter(info)
+	}
+	if timeText == "" {
+		return timeText
+	}
+	if ha.timeValueStyler != nil {
+		timeText = ha.timeValueStyler(info, timeText)
+	}
+	return timeText
+}
+
+func (ha *Handler) formatFunctionKey(info RecordInfo) string {
+	var s string
+	if ha.functionKeyFormatter != nil {
+		s = ha.functionKeyFormatter(info)
+	}
+	if s == "" {
+		return s
+	}
+	if ha.functionKeyStyler != nil {
+		s = ha.functionKeyStyler(info, s)
 	}
 	return s
 }
 
-func (ha *Handler) formatFunctionKey(lvl slog.Level, s string, frame runtime.Frame) string {
-	if frame.PC == 0 {
-		// If PC is not found, we should skip writing Source field.
-		return ""
+func (ha *Handler) formatFunctionValue(info RecordInfo) string {
+	var s string
+	if ha.functionValueFormatter != nil {
+		s = ha.functionValueFormatter(info)
 	}
-	if ha.functionFormatter != nil {
-		s = ha.functionFormatter(lvl, ha.packageNamePrefix, frame)
+	if s == "" {
+		return s
+	}
+	if ha.functionValueStyler != nil {
+		s = ha.functionValueStyler(info, s)
 	}
 	return s
 }
-
-// func (ha *Handler) formatSource(lvl slog.Level, pc uintptr) string {
-// 	if ha.formatSource != nil {
-// 		return ha.format
-// 	}
-// 	return ShortFileLineFormatter(lvl, )
-// }
 
 func (ha *Handler) formatTimeValue(lvl slog.Level, t time.Time) string {
 	var timeText string
-	if ha.timeFormatter != nil {
-		timeText = ha.timeFormatter(lvl, t)
+	if ha.timeKeyFormatter != nil {
+		timeText = ha.timeKeyFormatter(lvl, t)
 	} else {
 		timeText = t.Format(time.RFC3339Nano)
 	}
 	if timeText == "" {
 		return timeText
 	}
-	if ha.timeStyler != nil {
-		timeText = ha.timeStyler(lvl, timeText)
+	if ha.timeValueStyler != nil {
+		timeText = ha.timeValueStyler(lvl, timeText)
 	}
 	return timeText
 }
@@ -214,25 +253,25 @@ func (ha *Handler) WithGroup(name string) slog.Handler {
 // shallow copied.
 func (handler *Handler) Clone(opts ...Option) *Handler {
 	h := &Handler{
-		attrs:               append([]slog.Attr{}, handler.attrs...), // Must copy values to detach references from original.
-		groups:              append([]string{}, handler.groups...),   // Must copy values to detach references from original.
-		writer:              handler.writer,
-		opts:                handler.opts,
-		functionFormatter:   handler.functionFormatter,
-		timeFormatter:       handler.timeFormatter,
-		pool:                handler.pool,
-		levelValueFormatter: handler.levelValueFormatter,
-		addNewLine:          handler.addNewLine,
-		packageNamePrefix:   handler.packageNamePrefix,
-		messageFormatter:    handler.messageFormatter,
-		sourceStyler:        handler.sourceStyler,
-		timeStyler:          handler.timeStyler,
-		levelValueStyler:    handler.levelValueStyler,
-		messageStyler:       handler.messageStyler,
-		pretty:              handler.pretty,
-		fileLineFormatter:   handler.fileLineFormatter,
-		prettyOption:        handler.prettyOption,
-		prettyColor:         handler.prettyColor,
+		attrs:                  append([]slog.Attr{}, handler.attrs...), // Must copy values to detach references from original.
+		groups:                 append([]string{}, handler.groups...),   // Must copy values to detach references from original.
+		writer:                 handler.writer,
+		opts:                   handler.opts,
+		functionValueFormatter: handler.functionValueFormatter,
+		timeKeyFormatter:       handler.timeKeyFormatter,
+		pool:                   handler.pool,
+		levelFormatter:         handler.levelFormatter,
+		addNewLine:             handler.addNewLine,
+		packageName:            handler.packageName,
+		messageFormatter:       handler.messageFormatter,
+		sourceStyler:           handler.sourceStyler,
+		timeValueStyler:        handler.timeValueStyler,
+		levelValueStyler:       handler.levelValueStyler,
+		messageStyler:          handler.messageStyler,
+		pretty:                 handler.pretty,
+		fileKeyFormatter:       handler.fileKeyFormatter,
+		prettyOption:           handler.prettyOption,
+		prettyColor:            handler.prettyColor,
 	}
 	for _, opt := range opts {
 		if opt == nil {
