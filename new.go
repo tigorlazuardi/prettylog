@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/mattn/go-isatty"
+	"github.com/tidwall/pretty"
 )
 
 type Option func(h *Handler)
@@ -17,21 +18,23 @@ func New(opts ...Option) *Handler {
 			AddSource: true,
 			Level:     slog.LevelInfo,
 		},
-		headerLevelFormatter: DefaultLevelFormatter,
-		headerLevelStyler:    DefaultLevelStyler,
-		addNewLine:           true,
-		multiline:            true,
-		pool:                 newLimitedPool(defaultLimitedPoolSize),
-		attrs:                []slog.Attr{},
-		groups:               []string{},
-		pretty:               CanPretty(os.Stderr),
-		functionFormatter:    TrimPrefixFunctionFormatter,
-		fileLineFormatter:    ShortFileLineFormatter,
-		timeFormatter:        ShortTimeFormatter,
-		messageFormatter:     DefaultMessageFormatter,
-		sourceStyler:         DefaultSourceStyler,
-		timeStyler:           DefaultTimeStyler,
-		messageStyler:        DefaultMessageStyler,
+		levelValueFormatter: DefaultLevelFormatter,
+		levelValueStyler:    DefaultLevelStyler,
+		addNewLine:          true,
+		pool:                newLimitedPool(defaultLimitedPoolSize),
+		attrs:               []slog.Attr{},
+		groups:              []string{},
+		pretty:              CanPretty(os.Stderr),
+		functionFormatter:   TrimPrefixFunctionFormatter,
+		fileLineFormatter:   ShortFileLineFormatter,
+		timeFormatter:       ShortTimeFormatter,
+		messageFormatter:    DefaultMessageFormatter,
+		sourceStyler:        DefaultSourceStyler,
+		timeStyler:          DefaultTimeStyler,
+		messageStyler:       DefaultMessageStyler,
+		prettyOption:        pretty.DefaultOptions,
+		prettyColor:         pretty.TerminalStyle,
+		packageNamePrefix:   "",
 	}
 	for _, opt := range opts {
 		if opt == nil {
