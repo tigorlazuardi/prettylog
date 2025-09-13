@@ -6,20 +6,31 @@ import (
 	"github.com/fatih/color"
 )
 
+// Styler is a function type that applies styling (colors, formatting) to formatted strings.
+// It receives the RecordInfo for context (like log level) and the formatted string,
+// returning the styled version.
 type Styler func(info RecordInfo, formatted string) (styled string)
 
+// SimpleColoredStyler applies color styling based on the log level.
+// Colors: Error=Red, Warn=Yellow, Info=Green, Debug=Cyan, others=White.
 func SimpleColoredStyler(info RecordInfo, s string) string {
 	return getColoredText(info.Record.Level).Sprint(s)
 }
 
+// BoldColoredStyler applies bold color styling based on the log level.
+// Same colors as SimpleColoredStyler but with bold formatting.
 func BoldColoredStyler(info RecordInfo, s string) string {
 	return getColoredText(info.Record.Level).Add(color.Bold).Sprint(s)
 }
 
+// PlainStyler returns the string unchanged without any styling.
+// Useful when you want to disable styling for specific components.
 func PlainStyler(info RecordInfo, s string) string {
 	return s
 }
 
+// BackgroundBoldColoredStyler applies background color with bold white text based on log level.
+// Provides high contrast styling suitable for important information like log levels.
 func BackgroundBoldColoredStyler(info RecordInfo, s string) string {
 	return getColoredBackground(info.Record.Level).Add(color.Bold).Sprint(s)
 }

@@ -9,8 +9,13 @@ import (
 
 var _ EntryWriter = (*PrettyJSONWriter)(nil)
 
+// DefaultPrettyJSONWriter is the default entry writer for pretty-printed JSON output
+// of log attributes. It excludes standard slog keys (time, level, message, source)
+// and formats the remaining attributes as colored JSON.
 var DefaultPrettyJSONWriter = NewPrettyJSONWriter()
 
+// NewPrettyJSONWriter creates a new PrettyJSONWriter with default pretty-printing
+// options and terminal styling.
 func NewPrettyJSONWriter() *PrettyJSONWriter {
 	return &PrettyJSONWriter{
 		options: pretty.DefaultOptions,
@@ -19,6 +24,8 @@ func NewPrettyJSONWriter() *PrettyJSONWriter {
 	}
 }
 
+// PrettyJSONWriter is a specialized entry writer for pretty-printed JSON output.
+// It formats log attributes as colored, indented JSON, excluding standard slog keys.
 type PrettyJSONWriter struct {
 	options *pretty.Options
 	style   *pretty.Style
@@ -26,11 +33,15 @@ type PrettyJSONWriter struct {
 	pool *limitedPool
 }
 
+// WithPrettyOptions sets the pretty-printing options for JSON formatting.
+// This controls indentation, sorting, and other formatting aspects.
 func (pr *PrettyJSONWriter) WithPrettyOptions(opts *pretty.Options) *PrettyJSONWriter {
 	pr.options = opts
 	return pr
 }
 
+// WithStyle sets the color styling for JSON output.
+// This controls the colors used for different JSON elements like keys, values, etc.
 func (pr *PrettyJSONWriter) WithStyle(style *pretty.Style) *PrettyJSONWriter {
 	pr.style = style
 	return pr

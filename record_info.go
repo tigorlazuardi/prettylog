@@ -7,6 +7,9 @@ import (
 	"runtime"
 )
 
+// RecordInfo contains contextual information about the current log record being processed.
+// It is passed to formatters, stylers, and entry writers to provide all necessary
+// context for generating the final log output.
 type RecordInfo struct {
 	// Context is the context passed to the [slog.Handler.Handle] method.
 	Context context.Context

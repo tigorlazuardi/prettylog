@@ -1,10 +1,12 @@
 package prettylog
 
 import (
-	"bytes"
 	"strings"
 )
 
+// EntryWriter is the interface for components that write parts of log entries.
+// Each EntryWriter is responsible for formatting and outputting a specific
+// component of the log entry (e.g., level, message, timestamp).
 type EntryWriter interface {
 	// Key returns the key to be used for this entry.
 	//
@@ -21,13 +23,20 @@ type EntryWriter interface {
 	Write(info RecordInfo)
 }
 
-// UnimplementedEntryWriter is an [EntryWriter] that does nothing.
+var _ EntryWriter = (*UnimplementedEntryWriter)(nil)
+
+// UnimplementedEntryWriter is an EntryWriter that does nothing.
 // It can be embedded to have forward compatible implementations.
 type UnimplementedEntryWriter struct{}
 
-func (UnimplementedEntryWriter) KeyLen(info RecordInfo) int               { return 0 }
-func (UnimplementedEntryWriter) Write(info RecordInfo, buf *bytes.Buffer) {}
+func (UnimplementedEntryWriter) KeyLen(info RecordInfo) int { return 0 }
+func (UnimplementedEntryWriter) Write(info RecordInfo)      {}
 
+// DefaultPrefix returns the default prefix between log entry components.
+// It returns:
+//   - Empty string if buffer is empty
+//   - Newline if the writer has no key
+//   - Space for subsequent entries
 func DefaultPrefix(info RecordInfo, this *CommonWriter) string {
 	if info.Buffer.Len() == 0 {
 		return ""
@@ -38,12 +47,14 @@ func DefaultPrefix(info RecordInfo, this *CommonWriter) string {
 	return " "
 }
 
+// PrefixFunc is a function type for generating prefixes between log entry components.
 type PrefixFunc func(info RecordInfo, this *CommonWriter) string
 
-// CommonWriter is a common implementation of [EntryWriter] that writes a key-value pair.
+// CommonWriter is a common implementation of EntryWriter that writes a key-value pair.
+// It provides configurable formatting for both keys and values, along with styling options.
 //
-// Please use [NewCommonWriter] to create a new instance so fields are properly initialized
-// then modify it with the provided methods like [CommonWriter.WithKey], [CommonWriter.WithStaticKey],
+// Use NewCommonWriter to create a new instance with proper field initialization,
+// then customize it using the provided methods.
 type CommonWriter struct {
 	Key         Formatter
 	Valuer      Formatter
@@ -52,10 +63,11 @@ type CommonWriter struct {
 	ValueStyler Styler
 }
 
-// NewCommonWriter creates a new CommonWriter with the given value formatter to
-// extract the value from the RecordInfo.
+// NewCommonWriter creates a new CommonWriter with the given value formatter.
+// The value formatter extracts the actual value from the RecordInfo.
 //
-// The key is empty by default, and can be set by [WithKey] or [WithStaticKey].
+// The key is empty by default and can be set using WithKey or WithStaticKey methods.
+// Default styling uses bold colored keys and plain values.
 func NewCommonWriter(valuer Formatter) *CommonWriter {
 	return &CommonWriter{
 		Key:         Static(""),
@@ -66,31 +78,43 @@ func NewCommonWriter(valuer Formatter) *CommonWriter {
 	}
 }
 
+// WithKey sets the key formatter for this CommonWriter.
+// The key formatter determines what key text is displayed for this log component.
 func (cw *CommonWriter) WithKey(f Formatter) *CommonWriter {
 	cw.Key = f
 	return cw
 }
 
+// WithValuer sets the value formatter for this CommonWriter.
+// The value formatter extracts and formats the actual value from RecordInfo.
 func (cw *CommonWriter) WithValuer(f Formatter) *CommonWriter {
 	cw.Valuer = f
 	return cw
 }
 
+// WithStaticKey sets a static string as the key for this CommonWriter.
+// This is a convenience method equivalent to WithKey(Static(key)).
 func (cw *CommonWriter) WithStaticKey(key string) *CommonWriter {
 	cw.Key = Static(key)
 	return cw
 }
 
+// WithPrefix sets the prefix function for this CommonWriter.
+// The prefix function determines what text appears before this log component.
 func (cw *CommonWriter) WithPrefix(f PrefixFunc) *CommonWriter {
 	cw.Prefix = f
 	return cw
 }
 
+// WithKeyColorizer sets the styler for the key portion of this CommonWriter.
+// The key styler applies colors and formatting to the key text.
 func (cw *CommonWriter) WithKeyColorizer(c Styler) *CommonWriter {
 	cw.KeyStyler = c
 	return cw
 }
 
+// WithValueColorizer sets the styler for the value portion of this CommonWriter.
+// The value styler applies colors and formatting to the value text.
 func (cw *CommonWriter) WithValueColorizer(c Styler) *CommonWriter {
 	cw.ValueStyler = c
 	return cw

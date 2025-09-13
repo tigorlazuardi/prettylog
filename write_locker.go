@@ -5,11 +5,17 @@ import (
 	"sync"
 )
 
+// WriteLocker combines io.Writer with sync.Locker for thread-safe writing.
+// This interface ensures that write operations can be synchronized across
+// multiple goroutines.
 type WriteLocker interface {
 	io.Writer
 	sync.Locker
 }
 
+// WrapWriteLocker wraps an io.Writer to implement the WriteLocker interface.
+// If the writer already implements WriteLocker, it returns the writer unchanged.
+// Otherwise, it wraps it with a mutex for thread-safe writing.
 func WrapWriteLocker(w io.Writer) WriteLocker {
 	if wl, ok := w.(WriteLocker); ok {
 		return wl

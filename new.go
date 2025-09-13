@@ -8,6 +8,9 @@ import (
 	"github.com/mattn/go-isatty"
 )
 
+// DefaultWriters is the default set of entry writers used by new handlers.
+// It includes writers for level, message, time, function, file/line, and pretty JSON output,
+// and adds a new line at the end.
 var DefaultWriters = [...]EntryWriter{
 	DefaultLevelWriter,
 	DefaultMessageWriter,
@@ -15,8 +18,19 @@ var DefaultWriters = [...]EntryWriter{
 	DefaultFunctionWrtier,
 	DefaultFileLineWriter,
 	DefaultPrettyJSONWriter,
+	DefaultNewLineWriter,
 }
 
+// New creates a new Handler with default configuration and applies the given options.
+//
+// Default configuration:
+//   - Output to stderr
+//   - Info level logging
+//   - Source information enabled
+//   - Color support auto-detected based on terminal capabilities
+//   - All default writers enabled
+//
+// The handler can be customized using Option functions.
 func New(opts ...Option) *Handler {
 	h := &Handler{
 		writer: WrapWriteLocker(os.Stderr),
@@ -24,7 +38,6 @@ func New(opts ...Option) *Handler {
 			AddSource: true,
 			Level:     slog.LevelInfo,
 		},
-		addNewLine:  true,
 		pool:        newLimitedPool(defaultLimitedPoolSize),
 		attrs:       []slog.Attr{},
 		groups:      []string{},

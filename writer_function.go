@@ -6,20 +6,27 @@ import (
 
 var _ EntryWriter = (*FunctionWriter)(nil)
 
+// DefaultFunctionWrtier is the default entry writer for function names.
+// It uses short function format and includes the "Function" key.
 var DefaultFunctionWrtier = NewFunctionWriter()
 
+// ShortFunctionFormat returns the function name with package prefix trimmed.
 func ShortFunctionFormat(info RecordInfo) string {
 	return strings.TrimPrefix(info.Frame.Function, info.PackageName)
 }
 
+// FullFunctionFormat returns the complete function name including package.
 func FullFunctionFormat(info RecordInfo) string {
 	return info.Frame.Function
 }
 
+// FunctionWriter is a specialized entry writer for function name output.
+// It extends CommonWriter with function-specific formatting options.
 type FunctionWriter struct {
 	*CommonWriter
 }
 
+// NewFunctionWriter creates a new FunctionWriter with short format and "Function" key.
 func NewFunctionWriter() *FunctionWriter {
 	return &FunctionWriter{
 		CommonWriter: NewCommonWriter(ShortFunctionFormat).WithStaticKey("Function"),
@@ -39,6 +46,8 @@ func (fw *FunctionWriter) WithShort(short bool) *FunctionWriter {
 	return fw
 }
 
+// WithFormat sets a custom formatter for the function name output.
+// This allows complete control over how function names are formatted.
 func (fw *FunctionWriter) WithFormat(format Formatter) *FunctionWriter {
 	fw.CommonWriter.Valuer = format
 	return fw

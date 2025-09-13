@@ -7,6 +7,10 @@ import (
 	"runtime"
 )
 
+// Handler is a slog.Handler that provides cutomizeable, modular logging capabilities.
+//
+// Handler only implements the slog.Handler interface and pass the actual writing to
+// a list of [EntryWriter]s. This allows for flexible and modular logging behavior.
 type Handler struct {
 	attrs  []slog.Attr
 	groups []string
@@ -17,7 +21,6 @@ type Handler struct {
 	writers []EntryWriter
 
 	packageName string
-	addNewLine  bool
 	pool        *limitedPool
 }
 
@@ -59,9 +62,6 @@ func (ha *Handler) Handle(ctx context.Context, rec slog.Record) error {
 	if buf.Len() == 0 {
 		return nil
 	}
-	if ha.addNewLine {
-		buf.WriteByte('\n')
-	}
 	ha.writer.Lock()
 	defer ha.writer.Unlock()
 	_, err := io.Copy(ha.writer, buf)
@@ -90,8 +90,12 @@ func (ha *Handler) WithGroup(name string) slog.Handler {
 
 // Clone makes a copy of the handler and applies the given options to it.
 //
-// Other than Attrs and Groups stored in the handler, all other fields are
-// shallow copied.
+// Attrs and Groups collected from [WithAttrs] and [WithGroup] are copied
+// and detached from the original handler.
+//
+// Other fields (like output WriteLocker) are shallow copied and may still reference the same underlying
+// values. If you want to change those fields, use the appropriate options
+// when calling Clone.
 func (handler *Handler) Clone(opts ...Option) *Handler {
 	h := &Handler{
 		attrs:       append([]slog.Attr{}, handler.attrs...), // Must copy values to detach references from original.
@@ -99,7 +103,6 @@ func (handler *Handler) Clone(opts ...Option) *Handler {
 		writer:      handler.writer,
 		opts:        handler.opts,
 		pool:        handler.pool,
-		addNewLine:  handler.addNewLine,
 		packageName: handler.packageName,
 		color:       handler.color,
 		writers:     handler.writers,
