@@ -25,7 +25,8 @@
 // prettylog supports extensive customization through options:
 //
 //	handler := prettylog.New(
-//	    prettylog.WithPackageName("myapp"),
+//	    // Pass information to writers that this is the package that uses this logger. DefaultFunctionWriter will shorten function name if it starts with the package name.
+//	    prettylog.WithPackageName("github.com/tigorlazuardi/prettylog"),
 //	    prettylog.WithLevel(slog.LevelDebug),
 //	    prettylog.WithOutput(os.Stdout),
 //	    prettylog.WithAddSource(true),
@@ -40,7 +41,6 @@
 //   - WithReplaceAttr(func): Set attribute replacement function
 //   - WithHandlerOptions(*slog.HandlerOptions): Set complete handler options
 //   - WithColor(bool): Enable/disable colored output
-//   - WithNoColor(): Disable colored output (convenience function)
 //   - WithPoolSize(int): Set buffer pool size
 //
 // # Writer Management
@@ -56,7 +56,7 @@
 //	customWriter := prettylog.NewCommonWriter(myFormatter).
 //	    WithStaticKey("Custom").
 //	    WithValueColorizer(prettylog.BoldColoredStyler)
-//	
+//
 //	handler := prettylog.New(
 //	    prettylog.WithAdditionalWriters(customWriter),
 //	)
@@ -83,7 +83,7 @@
 // prettylog uses a modular system of EntryWriter components:
 //
 //   - DefaultLevelWriter: Log level with background color
-//   - DefaultMessageWriter: Log message with level-based color  
+//   - DefaultMessageWriter: Log message with level-based color
 //   - DefaultTimeWriter: Timestamp in configurable format
 //   - DefaultFunctionWriter: Function name with optional package trimming
 //   - DefaultFileLineWriter: File path and line number
@@ -94,13 +94,22 @@
 // # Color Support
 //
 // prettylog automatically detects terminal capabilities and enables colors when appropriate.
+//
 // Color support can be explicitly controlled:
 //
 //	// Force colors off
-//	handler := prettylog.New(prettylog.WithNoColor())
-//	
+//	handler := prettylog.New(prettylog.WithColor(false))
+//
 //	// Force colors on
 //	handler := prettylog.New(prettylog.WithColor(true))
+//
+//	// Auto Detect when Cloning.
+//	clonedHandler := handler.Clone(
+//		prettylog.WithOutput(os.Stdout),
+//		prettylog.WithColor(prettylog.CanColor(os.Stdout)),
+//	)
+//
+// Color is automatically detected on [New], but not when using [Handler.Clone] method.
 //
 // # Performance
 //

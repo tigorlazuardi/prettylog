@@ -7,10 +7,10 @@ import (
 	"runtime"
 )
 
-// RecordInfo contains contextual information about the current log record being processed.
+// RecordData contains contextual information about the current log record being processed.
 // It is passed to formatters, stylers, and entry writers to provide all necessary
 // context for generating the final log output.
-type RecordInfo struct {
+type RecordData struct {
 	// Context is the context passed to the [slog.Handler.Handle] method.
 	Context context.Context
 	// Record is the current [slog.Record] being processed.
@@ -37,7 +37,7 @@ type RecordInfo struct {
 	// KeyFieldLength is the length of the longest key field from all the [EntryWriter] after
 	// including ANSI color codes.
 	//
-	// This value is zero when passed into [EntryWriter.Key] (because it is not known yet).
+	// This value is zero when passed into [EntryWriter.KeyLen] (because it is not known yet).
 	KeyFieldLength int
 
 	// HandlerOptions is the handler options passed to the handler.

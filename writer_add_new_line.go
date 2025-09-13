@@ -1,6 +1,6 @@
 package prettylog
 
-func AddNewLineFormat(info RecordInfo) string {
+func AddNewLineFormat(info RecordData) string {
 	return "\n"
 }
 

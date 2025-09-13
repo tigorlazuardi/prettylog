@@ -11,12 +11,12 @@ var _ EntryWriter = (*FunctionWriter)(nil)
 var DefaultFunctionWrtier = NewFunctionWriter()
 
 // ShortFunctionFormat returns the function name with package prefix trimmed.
-func ShortFunctionFormat(info RecordInfo) string {
+func ShortFunctionFormat(info RecordData) string {
 	return strings.TrimPrefix(info.Frame.Function, info.PackageName)
 }
 
 // FullFunctionFormat returns the complete function name including package.
-func FullFunctionFormat(info RecordInfo) string {
+func FullFunctionFormat(info RecordData) string {
 	return info.Frame.Function
 }
 
@@ -53,7 +53,7 @@ func (fw *FunctionWriter) WithFormat(format Formatter) *FunctionWriter {
 	return fw
 }
 
-func (fu FunctionWriter) Write(info RecordInfo) {
+func (fu FunctionWriter) Write(info RecordData) {
 	// Keep consistent with slog contract to not write anything if caller info is not available.
 	if info.Frame.Func == nil {
 		return

@@ -12,15 +12,15 @@ type EntryWriter interface {
 	//
 	// If colored, this should also include the ANSI color codes
 	// as length of key
-	KeyLen(info RecordInfo) int
+	KeyLen(info RecordData) int
 
-	// Write writes the entry to the given buffer to [RecordInfo.Buffer] inside info.
+	// Write writes the entry to the given buffer to [RecordData.Buffer] inside info.
 	//
 	// There are information about whether to use color format or not inside info by
-	// referencing [RecordInfo.Color].
+	// referencing [RecordData.Color].
 	//
 	// To respect it or not is up to the implementation.
-	Write(info RecordInfo)
+	Write(info RecordData)
 }
 
 var _ EntryWriter = (*UnimplementedEntryWriter)(nil)
@@ -29,15 +29,15 @@ var _ EntryWriter = (*UnimplementedEntryWriter)(nil)
 // It can be embedded to have forward compatible implementations.
 type UnimplementedEntryWriter struct{}
 
-func (UnimplementedEntryWriter) KeyLen(info RecordInfo) int { return 0 }
-func (UnimplementedEntryWriter) Write(info RecordInfo)      {}
+func (UnimplementedEntryWriter) KeyLen(info RecordData) int { return 0 }
+func (UnimplementedEntryWriter) Write(info RecordData)      {}
 
 // DefaultPrefix returns the default prefix between log entry components.
 // It returns:
 //   - Empty string if buffer is empty
 //   - Newline if the writer has no key
 //   - Space for subsequent entries
-func DefaultPrefix(info RecordInfo, this *CommonWriter) string {
+func DefaultPrefix(info RecordData, this *CommonWriter) string {
 	if info.Buffer.Len() == 0 {
 		return ""
 	}
@@ -48,7 +48,7 @@ func DefaultPrefix(info RecordInfo, this *CommonWriter) string {
 }
 
 // PrefixFunc is a function type for generating prefixes between log entry components.
-type PrefixFunc func(info RecordInfo, this *CommonWriter) string
+type PrefixFunc func(info RecordData, this *CommonWriter) string
 
 // CommonWriter is a common implementation of EntryWriter that writes a key-value pair.
 // It provides configurable formatting for both keys and values, along with styling options.
@@ -64,7 +64,7 @@ type CommonWriter struct {
 }
 
 // NewCommonWriter creates a new CommonWriter with the given value formatter.
-// The value formatter extracts the actual value from the RecordInfo.
+// The value formatter extracts the actual value from the RecordData.
 //
 // The key is empty by default and can be set using WithKey or WithStaticKey methods.
 // Default styling uses bold colored keys and plain values.
@@ -86,7 +86,7 @@ func (cw *CommonWriter) WithKey(f Formatter) *CommonWriter {
 }
 
 // WithValuer sets the value formatter for this CommonWriter.
-// The value formatter extracts and formats the actual value from RecordInfo.
+// The value formatter extracts and formats the actual value from RecordData.
 func (cw *CommonWriter) WithValuer(f Formatter) *CommonWriter {
 	cw.Valuer = f
 	return cw
@@ -120,7 +120,7 @@ func (cw *CommonWriter) WithValueColorizer(c Styler) *CommonWriter {
 	return cw
 }
 
-func (cw *CommonWriter) KeyLen(info RecordInfo) int {
+func (cw *CommonWriter) KeyLen(info RecordData) int {
 	key := cw.Key(info)
 	if key == "" {
 		return 0
@@ -131,7 +131,7 @@ func (cw *CommonWriter) KeyLen(info RecordInfo) int {
 	return len(key)
 }
 
-func (cw *CommonWriter) Write(info RecordInfo) {
+func (cw *CommonWriter) Write(info RecordData) {
 	info.Buffer.WriteString(cw.Prefix(info, cw))
 	key := cw.Key(info)
 	value := cw.Valuer(info)

@@ -1,8 +1,8 @@
 package prettylog
 
-// DefaultMessageValuer extracts the log message from RecordInfo.
+// DefaultMessageValuer extracts the log message from RecordData.
 // This is the default value formatter used by DefaultMessageWriter.
-var DefaultMessageValuer = func(info RecordInfo) string {
+var DefaultMessageValuer = func(info RecordData) string {
 	return info.Record.Message
 }
 

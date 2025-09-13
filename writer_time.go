@@ -11,12 +11,12 @@ var _ EntryWriter = (*TimeWriter)(nil)
 var DefaultTimeWriter = NewTimeWriter()
 
 // TimeOnlyTimeFormat formats the timestamp in time.TimeOnly format ("15:04:05").
-func TimeOnlyTimeFormat(info RecordInfo) string {
+func TimeOnlyTimeFormat(info RecordData) string {
 	return info.Record.Time.Format(time.TimeOnly)
 }
 
 // RFC3339TimeFormat formats the timestamp in RFC3339 format.
-func RFC3339TimeFormat(info RecordInfo) string {
+func RFC3339TimeFormat(info RecordData) string {
 	return info.Record.Time.Format(time.RFC3339)
 }
 
@@ -48,13 +48,13 @@ func (tw *TimeWriter) WithRFC3339Format() *TimeWriter {
 // WithTimeFormat sets the time formatter to use a custom time layout.
 // The layout parameter follows Go's time formatting conventions.
 func (tw *TimeWriter) WithTimeFormat(layout string) *TimeWriter {
-	tw.CommonWriter.Valuer = func(info RecordInfo) string {
+	tw.CommonWriter.Valuer = func(info RecordData) string {
 		return info.Record.Time.Format(layout)
 	}
 	return tw
 }
 
-func (tw *TimeWriter) Write(info RecordInfo) {
+func (tw *TimeWriter) Write(info RecordData) {
 	if info.Record.Time.IsZero() {
 		return
 	}

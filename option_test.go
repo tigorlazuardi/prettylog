@@ -371,11 +371,11 @@ type testWriter struct {
 	name string
 }
 
-func (tw *testWriter) KeyLen(info RecordInfo) int {
+func (tw *testWriter) KeyLen(info RecordData) int {
 	return len(tw.name)
 }
 
-func (tw *testWriter) Write(info RecordInfo) {
+func (tw *testWriter) Write(info RecordData) {
 	info.Buffer.WriteString(tw.name)
 }
 
@@ -448,4 +448,3 @@ func TestHandlerOptionsPreservation(t *testing.T) {
 		t.Error("expected ReplaceAttr to be preserved")
 	}
 }
-

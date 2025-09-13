@@ -26,6 +26,9 @@ func NewPrettyJSONWriter() *PrettyJSONWriter {
 
 // PrettyJSONWriter is a specialized entry writer for pretty-printed JSON output.
 // It formats log attributes as colored, indented JSON, excluding standard slog keys.
+//
+// It excludes standard slog keys (time, level, message, source)
+// and formats the remaining attributes as colored JSON.
 type PrettyJSONWriter struct {
 	options *pretty.Options
 	style   *pretty.Style
@@ -47,11 +50,13 @@ func (pr *PrettyJSONWriter) WithStyle(style *pretty.Style) *PrettyJSONWriter {
 	return pr
 }
 
-func (pr *PrettyJSONWriter) KeyLen(info RecordInfo) int {
+// KeyLen implements [EntryWriter] interface. Always returns 0.
+func (pr *PrettyJSONWriter) KeyLen(info RecordData) int {
 	return 0
 }
 
-func (pr *PrettyJSONWriter) Write(info RecordInfo) {
+// Write implements [EntryWriter] interface.
+func (pr *PrettyJSONWriter) Write(info RecordData) {
 	if info.Buffer.Len() > 0 {
 		info.Buffer.WriteByte('\n')
 	}

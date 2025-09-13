@@ -40,7 +40,7 @@ func (ha *Handler) Handle(ctx context.Context, rec slog.Record) error {
 	defer ha.pool.Put(buf)
 
 	frame, _ := runtime.CallersFrames([]uintptr{rec.PC}).Next()
-	info := RecordInfo{
+	info := RecordData{
 		Context:        ctx,
 		Record:         rec,
 		PackageName:    ha.packageName,

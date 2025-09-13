@@ -37,7 +37,7 @@ func ExampleNew_customized() {
 // ExampleNew_customWriter demonstrates creating and using custom entry writers.
 func ExampleNew_customWriter() {
 	// Create a custom writer for request IDs
-	requestIDWriter := prettylog.NewCommonWriter(func(info prettylog.RecordInfo) string {
+	requestIDWriter := prettylog.NewCommonWriter(func(info prettylog.RecordData) string {
 		// Extract request ID from log record attributes
 		info.Record.Attrs(func(a slog.Attr) bool {
 			if a.Key == "request_id" {

@@ -1,8 +1,8 @@
 package prettylog
 
-// DefaultLevelValuer extracts the log level as a string from RecordInfo.
+// DefaultLevelValuer extracts the log level as a string from RecordData.
 // This is the default value formatter used by DefaultLevelWriter.
-func DefaultLevelValuer(info RecordInfo) string {
+func DefaultLevelValuer(info RecordData) string {
 	return info.Record.Level.String()
 }
 

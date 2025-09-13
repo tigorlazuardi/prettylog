@@ -20,7 +20,7 @@ func WithPackageName(name string) Option {
 }
 
 // WithOutput sets the output writer for the handler.
-// The writer will be wrapped with WriteLocker if it doesn't already implement it.
+// The writer will be wrapped with [WriteLocker] if it doesn't already implement it.
 func WithOutput(w io.Writer) Option {
 	return func(h *Handler) {
 		h.writer = WrapWriteLocker(w)
@@ -119,5 +119,46 @@ func ReplaceWriter(oldWriter, newWriter EntryWriter) Option {
 func WithPoolSize(maxSize int) Option {
 	return func(h *Handler) {
 		h.pool = newLimitedPool(maxSize)
+	}
+}
+
+// AddWritersBefore add writers before given tgt and unshift tgt up if found.
+//
+// If not found or tgt is nil, the writers are appended to the end.
+func AddWritersBefore(tgt EntryWriter, writers ...EntryWriter) Option {
+	return func(h *Handler) {
+		if len(writers) == 0 {
+			return
+		}
+		if tgt == nil {
+			h.writers = append(h.writers, writers...)
+			return
+		}
+		index := slices.Index(h.writers, tgt)
+		if index == -1 {
+			h.writers = append(h.writers, writers...)
+			return
+		}
+		h.writers = slices.Insert(h.writers, index, writers...)
+	}
+}
+
+// AddWritersAfter add writers after given tgt and add the writer
+// after the tgt, unshifting the rest of the writers.
+//
+// If not found or tgt is nil, the writers are appended to the end.
+func AddWritersAfter(tgt EntryWriter, writers ...EntryWriter) Option {
+	return func(h *Handler) {
+		if len(writers) == 0 {
+			return
+		}
+		if tgt == nil {
+			h.writers = append(h.writers, writers...)
+			return
+		}
+		h.writers = slices.Insert(h.writers,
+			slices.Index(h.writers, tgt)+1,
+			writers...,
+		)
 	}
 }
