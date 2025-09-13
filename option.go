@@ -121,9 +121,3 @@ func WithPoolSize(maxSize int) Option {
 		h.pool = newLimitedPool(maxSize)
 	}
 }
-
-// WithNoColor creates an option that disables all color output.
-// This is useful for logging to files or non-terminal outputs.
-func WithNoColor() Option {
-	return WithColor(false)
-}
