@@ -7,8 +7,12 @@ import (
 	"github.com/fatih/color"
 )
 
+var _ EntryWriter = (*LevelWriter)(nil)
+
+var DefaultLevelWriter = NewLevelWriter()
+
 type LevelWriter struct {
-	key            string
+	key            Formatter
 	keyColorizer   func(info RecordInfo, key string) string
 	valueColorizer func(info RecordInfo, value string) string
 	keyColoredLen  int
@@ -16,7 +20,7 @@ type LevelWriter struct {
 
 func NewLevelWriter() *LevelWriter {
 	return &LevelWriter{
-		key: "",
+		key: Static(""),
 		keyColorizer: func(info RecordInfo, key string) string {
 			if key == "" {
 				return ""
@@ -29,8 +33,9 @@ func NewLevelWriter() *LevelWriter {
 	}
 }
 
-func (lw *LevelWriter) WithKey(key string) *LevelWriter {
-	lw.key = key
+func (lw *LevelWriter) WithKey(f Formatter) *LevelWriter {
+	lw.key = f
+	lw.keyColoredLen = 0
 	return lw
 }
 
@@ -49,16 +54,14 @@ func (lw *LevelWriter) WithValueColorizer(c func(info RecordInfo, value string) 
 // If colored, this should also include the ANSI color codes
 // as length of key.
 func (le *LevelWriter) KeyLen(info RecordInfo) int {
-	if le.key == "" {
-		return 0
-	}
+	key := le.key(info)
 	if !info.DisableColor {
 		if le.keyColoredLen == 0 {
-			le.keyColoredLen = len(le.keyColorizer(info, le.key))
+			le.keyColoredLen = len(le.keyColorizer(info, key))
 		}
 		return le.keyColoredLen
 	}
-	return len(le.key)
+	return len(key)
 }
 
 // Write writes the entry to the given buffer. Information

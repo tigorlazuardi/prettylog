@@ -5,36 +5,46 @@ import (
 	"strings"
 )
 
+var _ EntryWriter = (*FunctionWriter)(nil)
+
+var DefaultFunctionWrtier = NewFunctionWriter()
+
 type FunctionWriter struct {
-	key            string
-	keyColorizer   func(info RecordInfo, key string) string
-	valueColorizer func(info RecordInfo, value string) string
+	key            Formatter
+	keyColorizer   Styler
+	valueColorizer Styler
 
 	keyColoredLen int
 	short         bool
 }
 
-func NewFunctionWriter(key string) *FunctionWriter {
+func NewFunctionWriter() *FunctionWriter {
 	return &FunctionWriter{
-		key:            key,
+		key:            Static("Function"),
 		keyColorizer:   DefaultFunctionKeyStyler,
 		valueColorizer: DefaultFunctionValueStyler,
 		short:          true,
 	}
 }
 
-func (fw *FunctionWriter) WithKeyColorizer(c func(info RecordInfo, key string) string) *FunctionWriter {
+func (fw *FunctionWriter) WithKey(f Formatter) *FunctionWriter {
+	fw.key = f
+
+func (fw *FunctionWriter) WithKeyColorizer(c Styler) *FunctionWriter {
 	fw.keyColorizer = c
 	fw.keyColoredLen = 0
 	return fw
 }
 
-func (fw *FunctionWriter) WithValueColorizer(c func(info RecordInfo, value string) string) *FunctionWriter {
+func (fw *FunctionWriter) WithValueColorizer(c Styler) *FunctionWriter {
 	fw.valueColorizer = c
 	return fw
 }
 
 // WithShort sets whether to use the short function name if possible.
+//
+// If true, the package name is stripped from the function name if it matches
+// the package name given by [WithPackageName] option in [New] or [Handler.Clone].
 func (fw *FunctionWriter) WithShort(short bool) *FunctionWriter {
 	fw.short = short
 	return fw
