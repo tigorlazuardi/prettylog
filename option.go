@@ -91,17 +91,11 @@ func WithAdditionalWriters(writers ...EntryWriter) Option {
 // This is useful for removing specific default writers while keeping others.
 func WithoutWriters(writers ...EntryWriter) Option {
 	return func(h *Handler) {
-		filtered := make([]EntryWriter, 0, len(h.writers))
 		for _, existing := range h.writers {
-			keep := true
-			if slices.Contains(writers, existing) {
-				keep = false
-			}
-			if keep {
-				filtered = append(filtered, existing)
-			}
+			h.writers = slices.DeleteFunc(h.writers, func(w EntryWriter) bool {
+				return w == existing
+			})
 		}
-		h.writers = filtered
 	}
 }
 
