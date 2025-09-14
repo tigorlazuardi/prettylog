@@ -13,11 +13,11 @@ var DefaultFileLineWriter = NewFileLineWriter()
 // ShortFileLineFormat returns file path and line number with working directory trimmed.
 func ShortFileLineFormat(info RecordData) string {
 	wd, _ := os.Getwd()
-	s, cut := strings.CutPrefix(info.Frame.File, wd+":"+strconv.Itoa(info.Frame.Line))
+	s, cut := strings.CutPrefix(info.Frame.File, wd)
 	if cut {
-		return strings.TrimPrefix(s, "/")
+		return strings.TrimPrefix(s, "/") + ":" + strconv.Itoa(info.Frame.Line)
 	}
-	return s
+	return s + ":" + strconv.Itoa(info.Frame.Line)
 }
 
 // LongFileLineFormat returns the complete file path with line number.
