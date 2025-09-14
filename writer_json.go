@@ -72,6 +72,11 @@ func (pr *PrettyJSONWriter) Write(info RecordData) {
 	jsonSerializer.Handle(context.Background(), info.Record)
 
 	b := placeholder.Bytes()
+	if len(b) == 2 && b[0] == '{' && b[1] == '}' {
+		// No attributes to log
+		return
+	}
+
 	b = pretty.PrettyOptions(b, pr.options)
 	if info.Color {
 		b = pretty.Color(b, pr.style)
