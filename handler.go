@@ -48,6 +48,7 @@ func (ha *Handler) Handle(ctx context.Context, rec slog.Record) error {
 		HandlerOptions: cloneHandlerOptions(ha.opts),
 		Color:          ha.color,
 		KeyFieldLength: 0,
+		Buffer:         buf,
 	}
 	keyFieldLength := 0
 	for _, w := range ha.writers {
