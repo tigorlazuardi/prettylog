@@ -176,8 +176,7 @@ func BenchmarkWriteLockerWrite(b *testing.B) {
 	wl := WrapWriteLocker(buf)
 	data := []byte("benchmark data")
 
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		buf.Reset()
 		wl.Write(data)
 	}
@@ -201,9 +200,7 @@ func BenchmarkWriteLockerConcurrentWrite(b *testing.B) {
 func BenchmarkWrapWriteLocker(b *testing.B) {
 	buf := &bytes.Buffer{}
 
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		WrapWriteLocker(buf)
 	}
 }
-
