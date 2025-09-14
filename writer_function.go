@@ -16,7 +16,7 @@ func ShortFunctionFormat(info RecordData) string {
 	if cut {
 		return strings.TrimPrefix(s, "/")
 	}
-	return info.Frame.Function
+	return s
 }
 
 // FullFunctionFormat returns the complete function name including package.
