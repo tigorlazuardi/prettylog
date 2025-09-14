@@ -56,3 +56,10 @@ func (fw *FileLineWriter) WithFormat(format Formatter) *FileLineWriter {
 	fw.CommonWriter.Valuer = format
 	return fw
 }
+
+func (fw *FileLineWriter) Write(info RecordData) {
+	if info.Frame.Func == nil {
+		return
+	}
+	fw.CommonWriter.Write(info)
+}
