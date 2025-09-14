@@ -141,7 +141,9 @@ func (cw *CommonWriter) Write(info RecordData) {
 		}
 		value = cw.ValueStyler(info, value)
 	}
-	info.Buffer.WriteString(key)
-	info.Buffer.WriteString(strings.Repeat(" ", info.KeyFieldLength-len(key)+1))
+	if len(key) > 0 {
+		info.Buffer.WriteString(key)
+		info.Buffer.WriteString(strings.Repeat(" ", info.KeyFieldLength-len(key)+1))
+	}
 	info.Buffer.WriteString(value)
 }
