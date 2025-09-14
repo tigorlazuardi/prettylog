@@ -32,7 +32,7 @@ func PlainStyler(info RecordData, s string) string {
 // BackgroundBoldColoredStyler applies background color with bold white text based on log level.
 // Provides high contrast styling suitable for important information like log levels.
 func BackgroundBoldColoredStyler(info RecordData, s string) string {
-	return getColoredBackground(info.Record.Level).Add(color.Bold).Sprint(s)
+	return getColoredBackground(info.Record.Level).Add(color.Bold).Sprint("", s, "")
 }
 
 // getColoredText returns a color.Color with text color based on the log level.
