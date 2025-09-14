@@ -12,7 +12,11 @@ var DefaultFunctionWrtier = NewFunctionWriter()
 
 // ShortFunctionFormat returns the function name with package prefix trimmed.
 func ShortFunctionFormat(info RecordData) string {
-	return strings.TrimPrefix(info.Frame.Function, info.PackageName)
+	s, cut := strings.CutPrefix(info.Frame.Function, info.PackageName)
+	if cut {
+		return strings.TrimPrefix(s, "/")
+	}
+	return info.Frame.Function
 }
 
 // FullFunctionFormat returns the complete function name including package.
