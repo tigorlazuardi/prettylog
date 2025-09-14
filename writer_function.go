@@ -10,13 +10,18 @@ var _ EntryWriter = (*FunctionWriter)(nil)
 // It uses short function format and includes the "Function" key.
 var DefaultFunctionWrtier = NewFunctionWriter()
 
-// ShortFunctionFormat returns the function name with package prefix trimmed.
+// ShortFunctionFormat returns the short function name if package name matches.
+// If package name is empty or does not match, returns the full function name.
 func ShortFunctionFormat(info RecordData) string {
-	s, cut := strings.CutPrefix(info.Frame.Function, info.PackageName)
-	if cut {
-		return strings.TrimPrefix(s, "/")
+	if info.PackageName == "" {
+		return info.Frame.Function
 	}
-	return s
+	hasPrefix := strings.HasPrefix(info.Frame.Function, info.PackageName)
+	if hasPrefix {
+		split := strings.Split(info.Frame.Function, "/")
+		return split[len(split)-1]
+	}
+	return info.Frame.Function
 }
 
 // FullFunctionFormat returns the complete function name including package.
