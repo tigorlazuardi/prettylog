@@ -18,7 +18,7 @@ func TestEnsureWriteDoesNotPanicWithNegativeRepeats(t *testing.T) {
 	}).WithStaticKey("key")
 	handler := New(
 		WithOutput(buf),
-		WithWriters(cw),
+		WithWriters(cw, DefaultPrettyJSONWriter),
 		WithColor(true),
 	)
 

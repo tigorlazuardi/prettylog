@@ -72,7 +72,7 @@ func (pr *PrettyJSONWriter) Write(info RecordData) {
 	jsonSerializer.Handle(context.Background(), info.Record)
 
 	b := placeholder.Bytes()
-	if len(b) == 2 && b[0] == '{' && b[1] == '}' {
+	if len(b) == 3 && b[0] == '{' && b[1] == '}' && b[2] == '\n' {
 		// No attributes to log
 		return
 	}
