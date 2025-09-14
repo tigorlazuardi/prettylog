@@ -125,7 +125,7 @@ func (cw *CommonWriter) KeyLen(info RecordData) int {
 	if key == "" {
 		return 0
 	}
-	if !info.Color {
+	if info.Color {
 		return len(cw.KeyStyler(info, key))
 	}
 	return len(key)
