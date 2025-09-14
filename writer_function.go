@@ -38,7 +38,7 @@ type FunctionWriter struct {
 // NewFunctionWriter creates a new FunctionWriter with short format and "Function" key.
 func NewFunctionWriter() *FunctionWriter {
 	return &FunctionWriter{
-		CommonWriter: NewCommonWriter(ShortFunctionFormat).WithStaticKey("Function"),
+		CommonWriter: NewCommonWriter(ShortFunctionFormat).WithStaticKey("Func"),
 	}
 }
 
