@@ -6,14 +6,13 @@ import (
 	"strings"
 )
 
-var wd, _ = os.Getwd()
-
 // DefaultFileLineWriter is the default entry writer for file and line information.
 // It uses short format and includes the "File" key.
 var DefaultFileLineWriter = NewFileLineWriter()
 
 // ShortFileLineFormat returns file path and line number with working directory trimmed.
 func ShortFileLineFormat(info RecordData) string {
+	wd, _ := os.Getwd()
 	s, cut := strings.CutPrefix(info.Frame.File, wd+":"+strconv.Itoa(info.Frame.Line))
 	if cut {
 		return strings.TrimPrefix(s, "/")
