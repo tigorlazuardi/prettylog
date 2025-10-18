@@ -132,12 +132,12 @@ func (cw *CommonWriter) KeyLen(info RecordData) int {
 }
 
 func (cw *CommonWriter) Write(info RecordData) {
-	info.Buffer.WriteString(cw.Prefix(info, cw))
-	key := cw.Key(info)
 	value := cw.Valuer(info)
 	if value == "" {
 		return
 	}
+	info.Buffer.WriteString(cw.Prefix(info, cw))
+	key := cw.Key(info)
 	if info.Color {
 		if key != "" {
 			key = cw.KeyStyler(info, key)
