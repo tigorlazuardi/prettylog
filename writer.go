@@ -135,6 +135,9 @@ func (cw *CommonWriter) Write(info RecordData) {
 	info.Buffer.WriteString(cw.Prefix(info, cw))
 	key := cw.Key(info)
 	value := cw.Valuer(info)
+	if value == "" {
+		return
+	}
 	if info.Color {
 		if key != "" {
 			key = cw.KeyStyler(info, key)
